@@ -17,11 +17,12 @@ import { OrbitLine } from './components/3d/OrbitLine';
 function App() {
   const [satellites, setSatellites] = useState([]);
   const [ history, setHistory] = useState([]);
-  const [selectedSatName, setSelectedSatName] = useState(null);
-  const selectedSat = satellites.find(sat => sat.name === selectedSatName);
+  const [selectedSat, setSelectedSat] = useState(null);
   const [isNight, setIsNight] = useState(false); // 낮/밤 상태를 여기서 관리
 
   const [ sunData, setSunData] = useState(null); // 태양 데이터 추가
+
+  
   useEffect(() => {
 
     const fetchSatelliteData = () => {
@@ -90,7 +91,7 @@ function App() {
             <p style={{ margin: '5px 0' }}><strong>고도:</strong> {selectedSat.altitude_km.toFixed(2)} km</p>
             <p style={{ margin: '5px 0' }}><strong>속도:</strong> {selectedSat.velocity_km_s} km/s</p>
             <button 
-              onClick={() => setSelectedSatName(null)}
+              onClick={() => setSelectedSat(null)}
               style={{
                 marginTop: '15px', width: '100%', padding: '5px',
                 backgroundColor: '#00ccff', color: '#000', fontWeight: 'bold',
@@ -114,7 +115,10 @@ function App() {
         )}
       </div>
 
-      <Canvas camera={{ position: [0, 0, 5], fov: 45,  }}>
+      <Canvas
+        camera={{ position: [0, 0, 5], fov: 45,  }}
+        raycaster={{ params: { Points: { threshold: 0.05 } } }}
+      >
 
         {/* 태양 조명 설치 */}
         <RealSun sunData={sunData} />
@@ -126,17 +130,21 @@ function App() {
         </Suspense>
 
         {/* 🌟 3. 위성 렌더링 시 클릭 이벤트와 색상 지정을 위해 props 전달 */}
-        {satellites.map(sat => (
-          <Satellite 
-            key={sat.name} // id가 없다면 name을 key로 써도 무방합니다
-            data={sat} 
-            onClick={() => setSelectedSatName(sat.name)} // 클릭 시 상태 업데이트
-            isSelected={selectedSatName === sat.name} // 현재 선택된 위성인지 확인
-          />
-        ))}
+        {satellites.length > 0 && (
+          <Satellite dataList={satellites} onClick={setSelectedSat} />
+        )}
         
         <OrbitLine history={history} />
         <OrbitControls />
+        {/* 15000개 렌더링 */}
+        {satellites.length > 0 && (<Satellite 
+        dataList={satellites}
+        onClick={setSelectedSat}
+        selectedSat={selectedSat} 
+        />
+      )}
+
+
       </Canvas>
     </div>
   );
